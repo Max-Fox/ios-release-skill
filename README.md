@@ -30,24 +30,17 @@ A skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that p
 
 ## Installation
 
-### Quick install
+Clone the repo and copy skill files:
 
 ```bash
-claude skill add --from Max-Fox/ios-release-skill
-```
-
-### Manual install
-
-1. Clone or download this repo
-2. Copy the `SKILL.md` and `references/` folder to your Claude Code skills directory:
-
-```bash
+git clone https://github.com/Max-Fox/ios-release-skill.git
 mkdir -p ~/.claude/skills/ios-release
-cp SKILL.md ~/.claude/skills/ios-release/
-cp -r references ~/.claude/skills/ios-release/
+cp ios-release-skill/SKILL.md ~/.claude/skills/ios-release/
+cp -r ios-release-skill/references ~/.claude/skills/ios-release/
+rm -rf ios-release-skill
 ```
 
-3. Register the skill in your Claude Code settings (`~/.claude/settings.json`):
+Then add the skill directory to your Claude Code settings (`~/.claude/settings.json`):
 
 ```json
 {
@@ -58,6 +51,8 @@ cp -r references ~/.claude/skills/ios-release/
   }
 }
 ```
+
+Restart Claude Code — the `/ios-release` command will be available.
 
 ## Configuration
 
