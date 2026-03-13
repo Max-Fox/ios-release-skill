@@ -36,19 +36,7 @@ Clone the repo into your Claude Code skills directory:
 git clone https://github.com/Max-Fox/ios-release-skill.git ~/.claude/skills/ios-release
 ```
 
-Then add the skill directory to your Claude Code settings (`~/.claude/settings.json`):
-
-```json
-{
-  "permissions": {
-    "additionalDirectories": [
-      "~/.claude/skills/ios-release"
-    ]
-  }
-}
-```
-
-Restart Claude Code — the `/ios-release` command will be available.
+Skills in `~/.claude/skills/` are discovered automatically. Restart Claude Code and the `/ios-release` command will be available.
 
 ## Configuration
 
