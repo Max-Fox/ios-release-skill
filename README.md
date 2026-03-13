@@ -28,6 +28,16 @@ A skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that p
 - **Multi-locale changelog** — generates "What's New" text in all your app's languages from git history.
 - **Smart localization check** — supports `.xcstrings` (Xcode 15+) with plural/variation forms, offers to auto-translate missing keys.
 
+## Benchmark
+
+Tested with [skill-creator](https://github.com/anthropics/claude-code-skill-creator) eval on 8 real-world iOS release scenarios:
+
+| Metric | With Skill | Without Skill |
+|--------|-----------|---------------|
+| Pass rate | **100%** (8/8) | 12.5% (1/8) |
+
+Test cases: build, clean, bump-version, bump-build, pre-release-check, archive, changelog, status.
+
 ## Installation
 
 Clone the repo into your Claude Code skills directory:
