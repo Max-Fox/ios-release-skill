@@ -6,19 +6,19 @@ A skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that p
 
 | Command | Description |
 |---------|-------------|
-| `/ios status` | Current version, build, branch, tag |
-| `/ios build` | Debug build + auto-fix errors |
-| `/ios clean` | Clean DerivedData and build cache |
-| `/ios test` | Run tests on simulator |
-| `/ios bump-build` | Increment build number +1 |
-| `/ios bump-version` | New version + reset build to 1 |
-| `/ios tag` | Git tag current version |
-| `/ios pre-release-check` | 11 parallel checks before release |
-| `/ios archive` | Archive + export IPA for App Store Connect |
-| `/ios upload` | Upload IPA to App Store Connect |
-| `/ios release` | Full cycle: checks → bump → archive |
-| `/ios changelog` | Generate "What's New" for App Store Connect |
-| `/ios init` | Project setup and config |
+| `/ios-release status` | Current version, build, branch, tag |
+| `/ios-release build` | Debug build + auto-fix errors |
+| `/ios-release clean` | Clean DerivedData and build cache |
+| `/ios-release test` | Run tests on simulator |
+| `/ios-release bump-build` | Increment build number +1 |
+| `/ios-release bump-version` | New version + reset build to 1 |
+| `/ios-release tag` | Git tag current version |
+| `/ios-release pre-release-check` | 11 parallel checks before release |
+| `/ios-release archive` | Archive + export IPA for App Store Connect |
+| `/ios-release upload` | Upload IPA to App Store Connect |
+| `/ios-release release` | Full cycle: checks → bump → archive |
+| `/ios-release changelog` | Generate "What's New" for App Store Connect |
+| `/ios-release init` | Project setup and config |
 
 ## Key highlights
 
@@ -42,9 +42,9 @@ claude skill add --from Max-Fox/ios-release-skill
 2. Copy the `SKILL.md` and `references/` folder to your Claude Code skills directory:
 
 ```bash
-mkdir -p ~/.claude/skills/ios
-cp SKILL.md ~/.claude/skills/ios/
-cp -r references ~/.claude/skills/ios/
+mkdir -p ~/.claude/skills/ios-release
+cp SKILL.md ~/.claude/skills/ios-release/
+cp -r references ~/.claude/skills/ios-release/
 ```
 
 3. Register the skill in your Claude Code settings (`~/.claude/settings.json`):
@@ -53,7 +53,7 @@ cp -r references ~/.claude/skills/ios/
 {
   "permissions": {
     "additionalDirectories": [
-      "~/.claude/skills/ios"
+      "~/.claude/skills/ios-release"
     ]
   }
 }
@@ -61,7 +61,7 @@ cp -r references ~/.claude/skills/ios/
 
 ## Configuration
 
-On first use, run `/ios init` to set up your project. This creates `.claude/ios-release.yml`:
+On first use, run `/ios-release init` to set up your project. This creates `.claude/ios-release.yml`:
 
 ```yaml
 scheme: MyApp

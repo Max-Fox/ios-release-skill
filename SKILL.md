@@ -1,5 +1,5 @@
 ---
-name: ios
+name: ios-release
 argument-hint: "[status|build|clean|test|pre-release-check|bump-build|bump-version|archive|upload|release|tag|changelog|init]"
 description: >
   Complete iOS release management: build, test, fix errors, archive, upload to
@@ -27,7 +27,7 @@ If no config exists — run Discovery, then offer `init` to create one.
 
 When project paths are unknown, find them by reading the filesystem:
 
-- **Workspace/project:** prefer `.xcworkspace` (exclude ones nested inside `.xcodeproj/`), fall back to `.xcodeproj`. Store the actual filename as `{workspace}` (e.g. `Talkzo.xcworkspace`) — it may differ from the scheme name.
+- **Workspace/project:** prefer `.xcworkspace` (exclude ones nested inside `.xcodeproj/`), fall back to `.xcodeproj`. Store the actual filename as `{workspace}` (e.g. `MyApp.xcworkspace`) — it may differ from the scheme name.
 - **Info.plist:** main app target only — exclude paths containing `Test`, `DerivedData`, `Pods`, `Frameworks`, `.build`
 - **Scheme:** run `xcodebuild -list`, pick the scheme whose name matches the project/workspace name. If no exact match — pick the first scheme that is not a test scheme (no `Test`, `Tests`, `UITests` suffix). If still ambiguous — ask the user.
 - **Simulator:** use config value first; if missing or unavailable, pick the newest available iPhone from `xcrun simctl list devices available`
