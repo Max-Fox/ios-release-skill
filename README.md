@@ -30,7 +30,7 @@ A skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that p
 
 ## Benchmark
 
-Tested with [skill-creator](https://github.com/anthropics/claude-plugins-official/tree/main/skill-creator) eval on 8 real-world iOS release scenarios:
+Tested with [skill-creator](https://github.com/anthropics/skills/tree/main/skills/skill-creator) eval on 8 real-world iOS release scenarios:
 
 | Metric | With Skill | Without Skill |
 |--------|-----------|---------------|
