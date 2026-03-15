@@ -236,10 +236,10 @@ If no tests exist in the scheme, say so clearly.
 ### `pre-release-check`
 Load config first.
 
-**⚡ Parallel execution is critical for speed.** All 11 checks are independent.
+**⚡ Parallel execution is critical for speed.** All 12 checks are independent.
 Launch them ALL in parallel using multiple tool calls in a single message:
-- Start the Release build (check 11) FIRST — it's the slowest (~90s)
-- In the SAME message, launch all static checks (1–10) as parallel tool calls
+- Start the Debug build (check 12) FIRST — it's the slowest (~90s)
+- In the SAME message, launch all static checks (1–11) as parallel tool calls
 - This way total time ≈ Release build time, not the sum of all checks
 - After all checks complete, collect results and print the summary table
 
@@ -357,7 +357,13 @@ If missing or empty — ⛔ "AppIcon не найден или пустой."
 **10. Git state**
 Warn if uncommitted changes or not on main/master/release branch.
 
-**11. Debug build** — verify code compiles, launch in parallel with checks 1–10
+**11. Liquid Glass**
+Grep Swift files for `.glassEffect`. Exclude test/mock/preview files.
+- If found — ✅ "Liquid Glass — используется ({count} файлов). Новый стиль Apple iOS 26."
+- If not found — ℹ️ "Liquid Glass — не используется. Рассмотри `.glassEffect()` для соответствия новому стилю iOS 26."
+Информационный пункт — не блокер и не warning.
+
+**12. Debug build** — verify code compiles, launch in parallel with checks 1–11
 Use the same command as `build` (Debug, simulator). A full Release build is
 redundant here because `archive` already does one — no need to build Release twice.
 ```
@@ -383,6 +389,7 @@ Pre-Release Check — MyApp v2.1.0 (build 48)
 ✅ API-ключи                — хардкод не найден
 ✅ App Icon                 — AppIcon.appiconset OK
 ✅ Git                      — чисто, ветка: main
+✅ Liquid Glass              — используется (3 файлов)
 ✅ Debug build
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⛔ 0 ошибок  ⚠️ 1 предупреждение
