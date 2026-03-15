@@ -490,6 +490,15 @@ then try altool → Transporter CLI → manual fallback, stopping at first succe
    Примечание: билды появляются в App Store Connect через 15–60 минут.
 8. Спроси: "Хочешь сгенерировать changelog для App Store Connect (What's New)?"
    If yes — run `changelog`.
+9. Спроси: "Закоммитить изменения версии? (bump файлы)"
+   If yes — `git add -A && git commit -m "v{version} (build {build})"`
+10. Спроси: "Поставить тег v{version}?"
+    If yes — `git tag v{version}`
+11. Спроси: "Запушить коммит и тег в remote?"
+    If yes — `git push && git push origin v{version}`
+
+Шаги 9–11 каждый требует подтверждения. Если пользователь отказался на любом —
+пропустить и перейти к следующему.
 
 ### `tag`
 Read current version and build number from the project. Then ask:
