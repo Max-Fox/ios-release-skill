@@ -48,6 +48,16 @@ git clone https://github.com/Max-Fox/ios-release-skill.git ~/.claude/skills/ios-
 
 Skills in `~/.claude/skills/` are discovered automatically. Restart Claude Code and the `/ios-release` command will be available.
 
+## Updating
+
+To update to the latest version:
+
+```bash
+cd ~/.claude/skills/ios-release && git pull
+```
+
+Restart Claude Code after updating.
+
 ## Configuration
 
 On first use, run `/ios-release init` to set up your project. This creates `.claude/ios-release.yml`:
