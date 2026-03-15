@@ -95,7 +95,7 @@ If invoked without a command argument (`/ios` with no args), show this table:
   init               Настройка проекта и конфига
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Использование: /ios <команда>
+Использование: /ios-release <команда>
 ```
 
 ---
