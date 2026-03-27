@@ -1,9 +1,10 @@
 ---
 name: ios-release
-argument-hint: "[status|build|clean|test|pre-release-check|bump-build|bump-version|archive|upload|release|tag|changelog|init]"
+argument-hint: "[status|build|clean|test|pre-release-check|bump-build|bump-version|archive|upload|release|tag|changelog|preview|init]"
 description: >
   Complete iOS release management: build, test, fix errors, archive, upload to
-  App Store Connect, version/build bumping, pre-release checks, changelog generation.
+  App Store Connect, version/build bumping, pre-release checks, changelog generation,
+  SwiftUI preview rendering (via Xcode MCP).
   Use this skill whenever the user mentions anything related to iOS development workflow:
   building the project, fixing build errors, running tests, preparing for release,
   archiving, uploading IPA, bumping version or build number, creating git tags,
@@ -20,6 +21,35 @@ description: >
 
 Read `.claude/ios-release.yml` before executing anything.
 If no config exists — run Discovery, then offer `init` to create one.
+
+---
+
+## Xcode MCP (опционально)
+
+Если доступны инструменты Xcode MCP (`BuildProject`, `XcodeListNavigatorIssues`,
+`RunAllTests` и др.), используй их **вместо** `xcodebuild` CLI для команд
+`build`, `fix`, `test`. MCP даёт структурированные ошибки и результаты тестов —
+не нужно парсить текстовый вывод.
+
+**Требования:** Xcode должен быть запущен с открытым проектом.
+**Fallback:** если MCP-инструменты недоступны (Xcode закрыт, MCP не настроен) —
+используй `xcodebuild` CLI как описано ниже.
+
+Полезные MCP-инструменты:
+| Инструмент | Назначение |
+|------------|-----------|
+| `BuildProject` | Запуск билда |
+| `GetBuildLog` | Получить лог билда |
+| `XcodeListNavigatorIssues` | Все ошибки/warnings с файлом и строкой |
+| `XcodeRefreshCodeIssuesInFile` | Real-time диагностика конкретного файла |
+| `RunAllTests` | Запуск всех тестов |
+| `RunSomeTests` | Запуск выбранных тестов |
+| `GetTestList` | Список доступных тестов |
+| `RenderPreview` | Скриншот SwiftUI превью |
+| `DocumentationSearch` | Поиск по документации Apple + WWDC |
+
+**Не используй** файловые MCP-инструменты (XcodeRead, XcodeWrite, XcodeGrep и т.д.) —
+Claude Code имеет свои Read, Write, Edit, Grep, Glob, которые работают лучше.
 
 ---
 
@@ -124,6 +154,15 @@ Simulator:    iPhone 17
 ### `build`
 Run a Debug build for simulator with **incremental compilation** — reusing
 Xcode's own DerivedData so repeated builds are fast (seconds, not minutes).
+
+**С Xcode MCP (если доступен):**
+1. `BuildProject` — запустить Debug билд
+2. `GetBuildLog` — получить лог билда
+3. `XcodeListNavigatorIssues` — получить структурированные ошибки (файл, строка, описание)
+4. Если есть ошибки — автоматически запустить `fix`
+5. Report успех с количеством warnings, или список ошибок
+
+**Без MCP (fallback):**
 Use `-workspace` if a `.xcworkspace` exists, otherwise use `-project`:
 ```
 # With workspace (preferred when .xcworkspace exists):
@@ -148,6 +187,8 @@ Key flags that make CLI builds fast:
 
 Report `** BUILD SUCCEEDED **` with warning count (only if > 0),
 or list all `error:` lines with file and line number.
+
+**Общее для обоих подходов:**
 
 **If build fails — automatically run `fix` logic** (see `fix` section below).
 Do not ask — just start fixing. This makes `build` a single command that
@@ -179,6 +220,17 @@ stale caches, or after dependency changes.
 Iteratively fix build errors. Max 3 attempts, max 10 errors per attempt.
 If more than 10 errors — show full list, fix first 10, ask whether to continue.
 
+**Получение ошибок:**
+
+**С Xcode MCP (если доступен):**
+1. `XcodeListNavigatorIssues` — получить все ошибки с точным файлом и строкой
+2. `XcodeRefreshCodeIssuesInFile` — для конкретного файла получить real-time диагностику
+3. После исправления: `BuildProject` → `XcodeListNavigatorIssues` → проверить что ошибки ушли
+
+**Без MCP:** парсить `error:` и `warning:` из вывода `xcodebuild`.
+
+**Общая логика (одинакова для обоих подходов):**
+
 **Group errors by file.** For each file with errors: open it once, apply all
 fixes in a single edit, save and close. Never open the same file twice in one attempt.
 
@@ -207,7 +259,17 @@ After each attempt: report errors found, what was fixed, what was skipped,
 then re-run build. After 3 attempts with remaining errors, show what's left and stop.
 
 ### `test`
-Run tests for simulator. Use `-workspace` or `-project` same as `build`.
+Run tests for simulator with **incremental compilation** — reusing Xcode's own
+DerivedData so repeated test runs are fast (seconds, not minutes).
+
+**С Xcode MCP (если доступен):**
+1. `GetTestList` — показать доступные тесты
+2. `RunAllTests` или `RunSomeTests` — запустить тесты
+3. Результат: имя теста + статус (pass/fail) + сообщение об ошибке
+4. Не нужен `perl` timeout — MCP управляет процессом
+
+**Без MCP (fallback):**
+Use `-workspace` or `-project` same as `build`.
 Use timeout from config (`test_timeout`, default 300 seconds).
 
 **Note:** macOS does not have `timeout` (it's GNU coreutils). Use `perl` as a
@@ -225,21 +287,30 @@ perl -e 'alarm {test_timeout}; exec @ARGV' -- \
   -destination 'platform=iOS Simulator,name={simulator}' \
   ONLY_ACTIVE_ARCH=YES
 ```
+Key flags for fast test runs:
+- `ONLY_ACTIVE_ARCH=YES` → builds only the needed architecture
+- `-destination` instead of `-sdk` → better build system caching
+- Do NOT pass `-derivedDataPath` — same as `build`, without it xcodebuild
+  reuses Xcode IDE's DerivedData automatically
+- Do NOT pass `-sdk iphonesimulator` — `-destination` already implies it,
+  and omitting `-sdk` enables DerivedData cache sharing with Xcode IDE
+
 `xcodebuild test -destination` boots the simulator automatically —
 do not run `simctl boot` manually.
 If tests time out, suggest the user check for network calls or infinite loops,
 or increase `test_timeout` in config.
 
+**Общее для обоих подходов:**
 Report pass/fail count and details of each failure (test name + reason).
 If no tests exist in the scheme, say so clearly.
 
 ### `pre-release-check`
 Load config first.
 
-**⚡ Parallel execution is critical for speed.** All 12 checks are independent.
+**⚡ Parallel execution is critical for speed.** All 13 checks are independent.
 Launch them ALL in parallel using multiple tool calls in a single message:
 - Start the Debug build (check 12) FIRST — it's the slowest (~90s)
-- In the SAME message, launch all static checks (1–11) as parallel tool calls
+- In the SAME message, launch all static checks (1–11, 13) as parallel tool calls
 - This way total time ≈ Release build time, not the sum of all checks
 - After all checks complete, collect results and print the summary table
 
@@ -373,6 +444,13 @@ xcodebuild build -project {project}.xcodeproj -scheme {scheme} \
   ONLY_ACTIVE_ARCH=YES
 ```
 
+**13. Deprecated API (только с Xcode MCP)**
+Если доступен `DocumentationSearch` — проверить ключевые фреймворки проекта
+(определяются из `import` в Swift-файлах) на наличие deprecated API, которые
+используются в проекте. Искать deprecated-аннотации для конкретных вызовов.
+ℹ️ информационный пункт, не блокер.
+Если MCP недоступен — "⏭ Deprecated API — MCP недоступен, проверка пропущена".
+
 Print `rejection_history` from config as reminders after the table.
 
 **Output format:**
@@ -391,6 +469,7 @@ Pre-Release Check — MyApp v2.1.0 (build 48)
 ✅ Git                      — чисто, ветка: main
 ✅ Liquid Glass              — используется (3 файлов)
 ✅ Debug build
+⏭ Deprecated API           — MCP недоступен, проверка пропущена
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⛔ 0 ошибок  ⚠️ 1 предупреждение
 
@@ -490,14 +569,12 @@ then try altool → Transporter CLI → manual fallback, stopping at first succe
    Примечание: билды появляются в App Store Connect через 15–60 минут.
 8. Спроси: "Хочешь сгенерировать changelog для App Store Connect (What's New)?"
    If yes — run `changelog`.
-9. Спроси: "Закоммитить изменения версии? (bump файлы)"
-   If yes — `git add -A && git commit -m "v{version} (build {build})"`
-10. Спроси: "Поставить тег v{version}?"
-    If yes — `git tag v{version}`
-11. Спроси: "Запушить коммит и тег в remote?"
+9. Спроси: "Закоммитить изменения версии и поставить тег v{version}?"
+   If yes — `git add -A && git commit -m "v{version} (build {build})"` и сразу `git tag v{version}`
+10. Спроси: "Запушить коммит и тег в remote?"
     If yes — `git push && git push origin v{version}`
 
-Шаги 9–11 каждый требует подтверждения. Если пользователь отказался на любом —
+Шаги 9–10 каждый требует подтверждения. Если пользователь отказался на любом —
 пропустить и перейти к следующему.
 
 ### `tag`
@@ -556,6 +633,17 @@ Generate one "What's New" block per locale listed in `localizations` config.
 Скопируй в App Store Connect → My Apps → {App} → {Version} → What's New
 ```
 
+### `preview`
+Рендерит SwiftUI превью и возвращает скриншоты. **Требует Xcode MCP.**
+
+1. Если MCP недоступен — "Команда `preview` требует Xcode MCP. Убедись что Xcode запущен с открытым проектом и MCP включён (Settings → Intelligence → Enable MCP)."
+2. Если указан файл — `RenderPreview` для этого файла
+3. Если файл не указан — найти все `*View.swift` файлы с `#Preview` или `PreviewProvider`, запросить у пользователя какой рендерить
+4. Показать скриншоты пользователю
+5. Полезно для визуальной проверки UI после изменений или перед релизом
+
+Использование: `/ios-release preview` или `/ios-release preview SomeView.swift`
+
 ### `init`
 Проверь и установи необходимые инструменты:
 
@@ -588,6 +676,26 @@ find /Applications -name "Transporter.app" -maxdepth 2
 Если отсутствует — сообщи: "Установи Transporter из Mac App Store (бесплатно) —
 он нужен для загрузки IPA если altool не сработает. Поиск: 'Transporter' от Apple."
 Не блокируй — это опционально, продолжи с init.
+
+**4. Xcode MCP**
+Проверь наличие `.mcp.json` в корне проекта:
+- Если файл существует и содержит `mcpServers.xcode` — ✅ пропустить
+- Если файла нет — создать `.mcp.json` в корне проекта:
+```json
+{
+  "mcpServers": {
+    "xcode": {
+      "type": "stdio",
+      "command": "xcrun",
+      "args": ["mcpbridge"]
+    }
+  }
+}
+```
+- Добавить `.mcp.json` в `.gitignore` если его там нет
+- Проверить что `xcrun mcpbridge --help` работает (Xcode CLT установлены)
+- Сообщи: "Xcode MCP настроен. Для работы нужно включить в Xcode: Settings → Intelligence → Enable Model Context Protocol. MCP даёт структурированные ошибки билда, тесты и доступ к документации Apple."
+- Если пользователь хочет MCP глобально (для всех проектов) — создать также `~/.claude/.mcp.json` с тем же содержимым
 
 After tools are set up, run discovery to auto-detect what's possible, then
 ask the user only for values that can't be discovered automatically.
